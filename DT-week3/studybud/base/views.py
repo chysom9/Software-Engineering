@@ -3,6 +3,9 @@ from django.db.models import Q
 from .models import Room, Topic
 from .forms import RoomForm
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 
 # rooms = [
 #     {'id': 1, 'name': 'Lets learn Python!'},
@@ -13,18 +16,34 @@ from django.contrib.auth.models import User
 def loginPage(request):
 
 
-    if request.method == 'post' :
+    if request.method == 'POST' :
         username = request.POST.get('username')
         password = request.POST.get('password')
+        
+
 
         try:
             user = User.objects.get(username=username)
         except:
-            
+            messages.error(request, 'User does not exist')
+
+
+        user = authenticate(request,username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.error(request, 'Username OR Password does not exist')
 
 
     context = {}
     return render(request, 'base/login_register.html', context)
+
+def logoutUser(request):
+    logout(request)
+    return redirect('home')
+
 
 def home(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
